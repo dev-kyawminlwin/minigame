@@ -6,7 +6,7 @@ const INITIAL_SNAKE = [
   { x: 7, y: 8 },
 ];
 const INITIAL_DIRECTION = { x: 0, y: -1 }; // Moving UP initially
-const FAST_SPEED = 120;
+const FAST_SPEED = 180;
 
 export default function SnakeGame({ onExit }) {
   const [snake, setSnake] = useState(INITIAL_SNAKE);
