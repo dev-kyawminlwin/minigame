@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import MatchCardGame from './games/MatchCardGame';
 import TicTacToeGame from './games/TicTacToeGame';
+import SnakeGame from './games/SnakeGame';
 import './index.css';
 
 function App() {
@@ -16,6 +17,10 @@ function App() {
 
   if (activeGame === 'tic-tac-toe') {
     return <TicTacToeGame onExit={() => navigateTo('hub')} />;
+  }
+
+  if (activeGame === 'snake') {
+    return <SnakeGame onExit={() => navigateTo('hub')} />;
   }
 
   // Render Hub
@@ -40,6 +45,14 @@ function App() {
           <div className="game-card-info">
             <h3>Tic-Tac-Toe</h3>
             <p>The classic game of X's and O's with a neon twist.</p>
+          </div>
+        </div>
+
+        <div className="game-card" onClick={() => navigateTo('snake')}>
+          <div className="game-card-icon">🐍</div>
+          <div className="game-card-info">
+            <h3>Neon Snake</h3>
+            <p>Grow your snake and beat your high score in this glowing classic.</p>
           </div>
         </div>
       </div>
