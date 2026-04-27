@@ -29,7 +29,7 @@ body {
 
 #root {
   width: 100%;
-  max-width: 800px;
+  max-width: 900px;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -47,11 +47,53 @@ h1 {
   text-shadow: 0 0 10px rgba(102, 252, 241, 0.5), 0 0 20px rgba(102, 252, 241, 0.3);
 }
 
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.difficulty-selector {
+  display: flex;
+  gap: 10px;
+  background: rgba(31, 40, 51, 0.6);
+  padding: 5px;
+  border-radius: 50px;
+  border: 1px solid rgba(102, 252, 241, 0.2);
+}
+
+.difficulty-btn {
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-transform: capitalize;
+}
+
+.difficulty-btn.active {
+  background: var(--accent-neon);
+  color: var(--bg-color);
+  box-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
+}
+
+.stats-board {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
 .stats {
   display: flex;
-  gap: 30px;
-  margin-bottom: 30px;
-  font-size: 1.2rem;
+  gap: 20px;
+  font-size: 1.1rem;
   font-weight: 600;
   background: rgba(31, 40, 51, 0.8);
   padding: 10px 25px;
@@ -70,7 +112,7 @@ h1 {
 .stat-label {
   color: var(--accent-color);
   text-transform: uppercase;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   letter-spacing: 1px;
 }
 
@@ -79,14 +121,36 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
+.best-score {
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.best-score .stat-value {
+  color: #ffd700;
+}
+
 /* Card Grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
+  gap: 10px;
   perspective: 1000px;
   width: 100%;
-  max-width: 500px;
+  margin: 0 auto;
+}
+
+.grid.easy {
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 450px;
+}
+
+.grid.medium {
+  grid-template-columns: repeat(5, 1fr);
+  max-width: 550px;
+}
+
+.grid.hard {
+  grid-template-columns: repeat(6, 1fr);
+  max-width: 650px;
 }
 
 /* Card Component Styles */
@@ -120,19 +184,18 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 3rem;
+  font-size: 2.5rem;
   border: 2px solid transparent;
 }
 
 .card-front {
   background: linear-gradient(135deg, var(--card-bg), rgba(11, 12, 16, 0.9));
   border-color: rgba(102, 252, 241, 0.1);
-  /* The "back" of the physical card, what we see initially */
 }
 
 .card-front::after {
   content: '✦';
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: var(--accent-color);
   opacity: 0.5;
 }
@@ -200,8 +263,22 @@ h1 {
 
 .modal-stats {
   font-size: 1.2rem;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   color: var(--text-primary);
+}
+
+.new-best {
+  color: #ffd700;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  animation: pulseGold 2s infinite;
+}
+
+@keyframes pulseGold {
+  0% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+  50% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+  100% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
 }
 
 .btn-restart {
@@ -235,8 +312,9 @@ h1 {
   to { transform: translateY(0); opacity: 1; }
 }
 
-@media (max-width: 500px) {
-  h1 { font-size: 2rem; }
-  .grid { gap: 10px; max-width: 350px; }
-  .card-face { font-size: 2rem; }
+@media (max-width: 600px) {
+  h1 { font-size: 2rem; margin-bottom: 10px; }
+  .grid.hard { grid-template-columns: repeat(4, 1fr); }
+  .card-face { font-size: 1.8rem; }
+  .stats-board { flex-direction: column; gap: 10px; align-items: center; }
 }

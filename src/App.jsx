@@ -2,20 +2,48 @@ import { useState, useEffect } from 'react';
 import Card from './components/Card';
 import './index.css';
 
-const EMOJIS = ['🚀', '🛸', '🌍', '🌟', '✨', '☄️', '🌙', '🤖'];
+const EMOJIS = ['🚀', '🛸', '🌍', '🌟', '✨', '☄️', '🌙', '🤖', '👾', '👽', '🪐', '🌌', '🌠', '🔭', '👨‍🚀', '👩‍🚀', '🛰️', '☀️'];
+
+const DIFFICULTY_SETTINGS = {
+  easy: { pairs: 8, columns: 4 },    // 16 cards
+  medium: { pairs: 10, columns: 5 }, // 20 cards
+  hard: { pairs: 18, columns: 6 }    // 36 cards
+};
 
 function App() {
+  const [difficulty, setDifficulty] = useState('easy');
   const [cards, setCards] = useState([]);
   const [flippedCards, setFlippedCards] = useState([]);
   const [moves, setMoves] = useState(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [isNewBest, setIsNewBest] = useState(false);
+  
+  // LocalStorage state
+  const [bestScores, setBestScores] = useState({
+    easy: { moves: null, time: null },
+    medium: { moves: null, time: null },
+    hard: { moves: null, time: null }
+  });
+
+  // Load best scores on mount
+  useEffect(() => {
+    const savedScores = localStorage.getItem('matchCardBestScores');
+    if (savedScores) {
+      setBestScores(JSON.parse(savedScores));
+    }
+  }, []);
 
   // Initialize game
-  const initializeGame = () => {
+  const initializeGame = (selectedDiff = difficulty) => {
+    const { pairs } = DIFFICULTY_SETTINGS[selectedDiff];
+    
+    // Select subset of emojis base on diff level
+    const gameEmojis = EMOJIS.slice(0, pairs);
+
     // Create pairs and shuffle
-    const deck = [...EMOJIS, ...EMOJIS]
+    const deck = [...gameEmojis, ...gameEmojis]
       .sort(() => Math.random() - 0.5)
       .map((emoji, index) => ({
         id: index,
@@ -30,38 +58,55 @@ function App() {
     setTimeElapsed(0);
     setIsGameOver(false);
     setIsLocked(false);
+    setIsNewBest(false);
   };
 
   useEffect(() => {
-    initializeGame();
-  }, []);
+    initializeGame(difficulty);
+  }, [difficulty]);
 
   // Timer effect
   useEffect(() => {
     let timer;
-    if (!isGameOver && moves > 0) {
+    if (!isGameOver && moves > 0 && cards.length > 0) { // Only start after first move
       timer = setInterval(() => {
         setTimeElapsed(prev => prev + 1);
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isGameOver, moves]);
+  }, [isGameOver, moves, cards.length]);
 
   // Check for game over
   useEffect(() => {
     if (cards.length > 0 && cards.every(card => card.isMatched)) {
       setIsGameOver(true);
+      
+      // Handle high scores update logic
+      let newBest = false;
+      const currentBest = bestScores[difficulty];
+      const newScores = { ...bestScores };
+      
+      if (!currentBest.moves || moves < currentBest.moves || (moves === currentBest.moves && timeElapsed < currentBest.time)) {
+        newScores[difficulty] = { moves, time: timeElapsed };
+        newBest = true;
+      }
+
+      if (newBest) {
+        setIsNewBest(true);
+        setBestScores(newScores);
+        localStorage.setItem('matchCardBestScores', JSON.stringify(newScores));
+      }
     }
-  }, [cards]);
+  }, [cards, difficulty, moves, timeElapsed, bestScores]);
 
   const formatTime = (seconds) => {
+    if (seconds === null) return '--:--';
     const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
     const secs = (seconds % 60).toString().padStart(2, '0');
     return `${mins}:${secs}`;
   };
 
   const handleCardClick = (clickedCard) => {
-    // Prevent clicking if locked, already flipped, or matched
     if (
       isLocked || 
       clickedCard.isFlipped || 
@@ -79,7 +124,7 @@ function App() {
     const newFlippedCards = [...flippedCards, clickedCard];
     setFlippedCards(newFlippedCards);
 
-    // If 2 cards are flipped, check for match
+    // Check for match
     if (newFlippedCards.length === 2) {
       setMoves(prev => prev + 1);
       setIsLocked(true);
@@ -87,7 +132,6 @@ function App() {
       const [card1, card2] = newFlippedCards;
 
       if (card1.icon === card2.icon) {
-        // Match found
         setTimeout(() => {
           setCards(prev => prev.map(c => 
             c.icon === card1.icon ? { ...c, isMatched: true, isFlipped: false } : c
@@ -96,7 +140,6 @@ function App() {
           setIsLocked(false);
         }, 500);
       } else {
-        // No match, flip them back
         setTimeout(() => {
           setCards(prev => prev.map(c => {
             if (c.id === card1.id || c.id === card2.id) {
@@ -113,20 +156,49 @@ function App() {
 
   return (
     <>
-      <h1>Match Cards</h1>
-      
-      <div className="stats">
-        <div className="stat-item">
-          <span className="stat-label">Moves:</span>
-          <span className="stat-value">{moves}</span>
+      <div className="controls-container">
+        <h1>Match Cards</h1>
+        
+        <div className="difficulty-selector">
+          {Object.keys(DIFFICULTY_SETTINGS).map((level) => (
+            <button 
+              key={level}
+              className={`difficulty-btn ${difficulty === level ? 'active' : ''}`}
+              onClick={() => {
+                if(difficulty !== level) setDifficulty(level);
+              }}
+            >
+              {level}
+            </button>
+          ))}
         </div>
-        <div className="stat-item">
-          <span className="stat-label">Time:</span>
-          <span className="stat-value">{formatTime(timeElapsed)}</span>
+        
+        <div className="stats-board">
+          <div className="stats current-score">
+            <div className="stat-item">
+              <span className="stat-label">Moves:</span>
+              <span className="stat-value">{moves}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Time:</span>
+              <span className="stat-value">{formatTime(timeElapsed)}</span>
+            </div>
+          </div>
+
+          <div className="stats best-score">
+            <div className="stat-item">
+              <span className="stat-label">Best Moves:</span>
+              <span className="stat-value">{bestScores[difficulty].moves || '--'}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Best Time:</span>
+              <span className="stat-value">{formatTime(bestScores[difficulty].time)}</span>
+            </div>
+          </div>
         </div>
       </div>
       
-      <div className="grid">
+      <div className={`grid ${difficulty}`}>
         {cards.map(card => (
           <Card 
             key={card.id} 
@@ -140,11 +212,12 @@ function App() {
         <div className="modal-overlay">
           <div className="modal-content">
             <h2>Mission Accomplished! 🏆</h2>
+            {isNewBest && <div className="new-best">🎉 NEW PERSONAL BEST! 🎉</div>}
             <div className="modal-stats">
               <p>You finished in <strong>{moves}</strong> moves</p>
               <p>Time: <strong>{formatTime(timeElapsed)}</strong></p>
             </div>
-            <button className="btn-restart" onClick={initializeGame}>
+            <button className="btn-restart" onClick={() => initializeGame()}>
               Play Again
             </button>
           </div>
